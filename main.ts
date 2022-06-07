@@ -1,8 +1,8 @@
+namespace SpriteKind {
+    export const Platform = SpriteKind.create()
+}
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     simplified.gravity_jump(mySprite)
-})
-scene.onHitWall(SpriteKind.Player, function (sprite, location) {
-	
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`Star1`, function (sprite, location) {
     tiles.setTileAt(location, assets.tile`transparency16`)
@@ -50,11 +50,11 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`Portal`, function (sprite, lo
     if (level == 1) {
         info.setLife(3)
         level += 1
-        scene.setBackgroundImage(assets.image`background2`)
         tiles.setTilemap(tilemap`level2`)
         console.log(location)
         mySprite.say("Level 2", 500)
         mySprite.setPosition(8, 8)
+        scene.setBackgroundImage(assets.image`background2`)
     } else if (level == 2) {
         info.setLife(3)
         level += 1
@@ -91,7 +91,12 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`chest2`, function (sprite, lo
 info.onLifeZero(function () {
     game.over(false)
 })
+scene.onOverlapTile(SpriteKind.Projectile, assets.tile`SnowMoundBridge`, function (sprite, location) {
+    tiles.setWallAt(location, false)
+    tiles.setTileAt(location, assets.tile`transparency16`)
+})
 scene.onOverlapTile(SpriteKind.Player, assets.tile`Lava`, function (sprite, location) {
+    mySprite.startEffect(effects.fire)
     info.changeLifeBy(-1)
     simplified.gravity_jump(mySprite)
 })
@@ -103,6 +108,7 @@ scene.onOverlapTile(SpriteKind.Projectile, assets.tile`bounce`, function (sprite
     tiles.setWallAt(location, false)
     tiles.setTileAt(location, assets.tile`transparency16`)
 })
+let fireball_spawn_lava: Sprite = null
 let projectile: Sprite = null
 let mySprite: Sprite = null
 let level = 0
@@ -114,9 +120,32 @@ mySprite = sprites.create(assets.image`Player`, SpriteKind.Player)
 controller.moveSprite(mySprite, 100, 0)
 mySprite.ay = 500
 scene.cameraFollowSprite(mySprite)
+game.onUpdateInterval(2000, function () {
+    fireball_spawn_lava = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . 2 2 2 2 . . . . . . 
+        . . . . . 4 2 4 4 2 4 . . . . . 
+        . . . . 2 2 5 4 4 5 2 2 . . . . 
+        . . . . 2 4 4 5 5 4 4 2 . . . . 
+        . . . . 2 4 4 5 5 4 4 2 . . . . 
+        . . . . 2 2 5 4 4 5 2 2 . . . . 
+        . . . . . 4 2 4 4 2 4 . . . . . 
+        . . . . . . 2 2 2 2 . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.Player)
+    fireball_spawn_lava.startEffect(effects.fire)
+    fireball_spawn_lava.ay = 500
+    simplified.gravity_jump(fireball_spawn_lava)
+})
 forever(function () {
     if (mySprite.tileKindAt(TileDirection.Bottom, assets.tile`myTile`)) {
-        pause(1000)
+        pause(1500)
         tiles.setWallAt(mySprite.tilemapLocation().getNeighboringLocation(CollisionDirection.Bottom), false)
         tiles.setTileAt(mySprite.tilemapLocation().getNeighboringLocation(CollisionDirection.Bottom), assets.tile`transparency16`)
     }
