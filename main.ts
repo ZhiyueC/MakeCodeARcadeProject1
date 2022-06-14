@@ -1,7 +1,13 @@
 namespace SpriteKind {
     export const Platform = SpriteKind.create()
+    export const Fire = SpriteKind.create()
 }
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
+    simplified.gravity_jump(mySprite)
+})
+scene.onOverlapTile(SpriteKind.Player, assets.tile`Lava_left`, function (sprite, location) {
+    mySprite.startEffect(effects.fire)
+    info.changeLifeBy(-1)
     simplified.gravity_jump(mySprite)
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`Star1`, function (sprite, location) {
@@ -18,9 +24,23 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
     false
     )
 })
+scene.onOverlapTile(SpriteKind.Player, assets.tile`Lava_right`, function (sprite, location) {
+    mySprite.startEffect(effects.fire)
+    info.changeLifeBy(-1)
+    simplified.gravity_jump(mySprite)
+})
+scene.onOverlapTile(SpriteKind.Projectile, assets.tile`Lava_right`, function (sprite, location) {
+    tiles.setWallAt(location, false)
+    tiles.setTileAt(location, assets.tile`transparency16`)
+})
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     tiles.setWallAt(tiles.locationInDirection(tiles.locationOfSprite(mySprite), CollisionDirection.Bottom), true)
     tiles.setTileAt(tiles.locationInDirection(tiles.locationOfSprite(mySprite), CollisionDirection.Bottom), assets.tile`bounce`)
+})
+scene.onOverlapTile(SpriteKind.Player, assets.tile`Lava_down`, function (sprite, location) {
+    mySprite.startEffect(effects.fire)
+    info.changeLifeBy(-1)
+    simplified.gravity_jump(mySprite)
 })
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     animation.runImageAnimation(
@@ -48,6 +68,8 @@ controller.left.onEvent(ControllerButtonEvent.Released, function () {
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`Portal`, function (sprite, location) {
     if (level == 1) {
+        level += 1
+    } else if (level == 2) {
         info.setLife(3)
         level += 1
         tiles.setTilemap(tilemap`level2`)
@@ -55,18 +77,19 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`Portal`, function (sprite, lo
         mySprite.say("Level 2", 500)
         mySprite.setPosition(8, 8)
         scene.setBackgroundImage(assets.image`background2`)
-    } else if (level == 2) {
+    } else {
         info.setLife(3)
         level += 1
         scene.setBackgroundImage(assets.image`background2`)
         tiles.setTilemap(tilemap`level3`)
         mySprite.setPosition(8, 8)
         console.log(location)
-        mySprite.say("Level 3", 500)
-        level += 1
-    } else {
-    	
+        mySprite.say("Level 3: Stared Visiom", 500)
     }
+})
+scene.onOverlapTile(SpriteKind.Projectile, assets.tile`Lava_down`, function (sprite, location) {
+    tiles.setWallAt(location, false)
+    tiles.setTileAt(location, assets.tile`transparency16`)
 })
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     animation.runImageAnimation(
@@ -91,16 +114,25 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`chest2`, function (sprite, lo
 info.onLifeZero(function () {
     game.over(false)
 })
-scene.onOverlapTile(SpriteKind.Projectile, assets.tile`SnowMoundBridge`, function (sprite, location) {
-    tiles.setWallAt(location, false)
-    tiles.setTileAt(location, assets.tile`transparency16`)
-})
-scene.onOverlapTile(SpriteKind.Player, assets.tile`Lava`, function (sprite, location) {
+scene.onOverlapTile(SpriteKind.Player, assets.tile`Lava_up`, function (sprite, location) {
     mySprite.startEffect(effects.fire)
     info.changeLifeBy(-1)
     simplified.gravity_jump(mySprite)
 })
-scene.onOverlapTile(SpriteKind.Projectile, assets.tile`Lava`, function (sprite, location) {
+scene.onOverlapTile(SpriteKind.Projectile, assets.tile`SnowMoundBridge`, function (sprite, location) {
+    tiles.setWallAt(location, false)
+    tiles.setTileAt(location, assets.tile`transparency16`)
+})
+scene.onOverlapTile(SpriteKind.Player, assets.tile`DeepLava`, function (sprite, location) {
+    mySprite.startEffect(effects.fire)
+    info.changeLifeBy(-1)
+    simplified.gravity_jump(mySprite)
+})
+scene.onOverlapTile(SpriteKind.Projectile, assets.tile`Lava_left`, function (sprite, location) {
+    tiles.setWallAt(location, false)
+    tiles.setTileAt(location, assets.tile`transparency16`)
+})
+scene.onOverlapTile(SpriteKind.Projectile, assets.tile`Lava_up`, function (sprite, location) {
     tiles.setWallAt(location, false)
     tiles.setTileAt(location, assets.tile`transparency16`)
 })
@@ -108,7 +140,6 @@ scene.onOverlapTile(SpriteKind.Projectile, assets.tile`bounce`, function (sprite
     tiles.setWallAt(location, false)
     tiles.setTileAt(location, assets.tile`transparency16`)
 })
-let fireball_spawn_lava: Sprite = null
 let projectile: Sprite = null
 let mySprite: Sprite = null
 let level = 0
@@ -117,32 +148,10 @@ level = 1
 scene.setBackgroundImage(assets.image`background`)
 tiles.setTilemap(tilemap`level1`)
 mySprite = sprites.create(assets.image`Player`, SpriteKind.Player)
+mySprite.setPosition(6, 89)
 controller.moveSprite(mySprite, 100, 0)
 mySprite.ay = 500
 scene.cameraFollowSprite(mySprite)
-game.onUpdateInterval(2000, function () {
-    fireball_spawn_lava = sprites.create(img`
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . 2 2 2 2 . . . . . . 
-        . . . . . 4 2 4 4 2 4 . . . . . 
-        . . . . 2 2 5 4 4 5 2 2 . . . . 
-        . . . . 2 4 4 5 5 4 4 2 . . . . 
-        . . . . 2 4 4 5 5 4 4 2 . . . . 
-        . . . . 2 2 5 4 4 5 2 2 . . . . 
-        . . . . . 4 2 4 4 2 4 . . . . . 
-        . . . . . . 2 2 2 2 . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        . . . . . . . . . . . . . . . . 
-        `, SpriteKind.Player)
-    fireball_spawn_lava.startEffect(effects.fire)
-    fireball_spawn_lava.ay = 500
-    simplified.gravity_jump(fireball_spawn_lava)
-})
 forever(function () {
     if (mySprite.tileKindAt(TileDirection.Bottom, assets.tile`myTile`)) {
         pause(1500)
